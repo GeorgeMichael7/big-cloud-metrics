@@ -1,41 +1,39 @@
-import { withAuth } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const path = req.nextUrl.pathname;
-    const role = token?.role as string | undefined;
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req });
 
-    // Manager routes: only MANAGER and SUPER_ADMIN
-    if (path.startsWith("/manager")) {
-      if (!role || !["MANAGER", "SUPER_ADMIN"].includes(role)) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
-    }
+  const path = req.nextUrl.pathname;
 
-    // Admin routes: only SUPER_ADMIN
-    if (path.startsWith("/admin")) {
-      if (role !== "SUPER_ADMIN") {
-        const dest = ["MANAGER"].includes(role ?? "") ? "/manager" : "/dashboard";
-        return NextResponse.redirect(new URL(dest, req.url));
-      }
-    }
-
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      // Route is protected if there's any valid token
-      authorized: ({ token }) => !!token,
-    },
+  // Not authenticated → redirect to login
+  if (!token) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", path);
+    return NextResponse.redirect(loginUrl);
   }
-);
+
+  const role = token.role as string | undefined;
+
+  // Manager routes: only MANAGER and SUPER_ADMIN
+  if (path.startsWith("/manager")) {
+    if (!role || !["MANAGER", "SUPER_ADMIN"].includes(role)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
+
+  // Admin routes: only SUPER_ADMIN
+  if (path.startsWith("/admin")) {
+    if (role !== "SUPER_ADMIN") {
+      const dest = role === "MANAGER" ? "/manager" : "/dashboard";
+      return NextResponse.redirect(new URL(dest, req.url));
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/manager/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/dashboard/:path*", "/manager/:path*", "/admin/:path*"],
 };
