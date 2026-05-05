@@ -128,7 +128,7 @@ function ProgressRow({
       style={{
         background: isTeam ? `${color}11` : "rgba(30,41,59,0.4)",
         borderColor: isTeam ? `${color}33` : "rgba(148,163,184,0.07)",
-        ringColor: isTeam ? color : "transparent",
+        boxShadow: isTeam ? `0 0 0 1px ${color}` : "none",
       }}
     >
       <div className="flex items-center justify-between mb-2">

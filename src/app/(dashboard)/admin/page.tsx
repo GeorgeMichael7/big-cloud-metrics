@@ -336,8 +336,7 @@ function UserFormModal({
                     className="w-6 h-6 rounded-full ring-2 transition-all"
                     style={{
                       background: c,
-                      ringColor: avatarColor === c ? "white" : "transparent",
-                      outline: avatarColor === c ? `2px solid ${c}` : "none",
+                      outline: avatarColor === c ? `2px solid ${c}` : "2px solid transparent",
                       outlineOffset: "2px",
                     }} />
                 ))}
