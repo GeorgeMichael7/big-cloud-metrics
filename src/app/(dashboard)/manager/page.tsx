@@ -240,13 +240,7 @@ export default function ManagerPage() {
                   </div>
                   <ContributionChart
                     metricType={mt}
-                    entries={
-                      (teamData?.byUser ?? byUser) as Array<{
-                        user: { id: string; name: string; role: string; avatarColor: string; isActive: boolean; locationId: string; email: string; createdAt: string };
-                        totals: Record<string, number>;
-                        grandTotal: number;
-                      }>
-                    }
+                    entries={teamData?.byUser ?? byUser}
                     loading={overviewLoading || teamLoading}
                   />
                 </div>

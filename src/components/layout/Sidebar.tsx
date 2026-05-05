@@ -27,7 +27,7 @@ interface SidebarProps {
 interface NavItem {
   href: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<Record<string, unknown>>;
   roles: string[];
 }
 

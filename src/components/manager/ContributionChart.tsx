@@ -4,10 +4,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, Cell,
 } from "recharts";
-import type { MetricType, UserSafe } from "@/types";
+import type { MetricType } from "@/types";
 
 interface ContributionEntry {
-  user: UserSafe;
+  user: { id: string; name: string; avatarColor: string; [key: string]: unknown };
   totals: Record<string, number>;
   grandTotal: number;
 }
