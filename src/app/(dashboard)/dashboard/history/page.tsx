@@ -125,7 +125,7 @@ export default function HistoryPage() {
                 />
                 {metricTypes
                   ?.filter((mt) =>
-                    chartData.some((d) => d[mt.name] !== undefined)
+                    chartData.some((d: Record<string, unknown>) => d[mt.name] !== undefined)
                   )
                   .map((mt) => (
                     <Line
@@ -163,14 +163,14 @@ export default function HistoryPage() {
               {metricTypes
                 ?.filter((mt) => {
                   const sum = chartData.reduce(
-                    (acc, d) => acc + ((d[mt.name] as number) ?? 0),
+                    (acc: number, d: Record<string, unknown>) => acc + ((d[mt.name] as number) ?? 0),
                     0
                   );
                   return sum > 0;
                 })
                 .map((mt) => {
                   const sum = chartData.reduce(
-                    (acc, d) => acc + ((d[mt.name] as number) ?? 0),
+                    (acc: number, d: Record<string, unknown>) => acc + ((d[mt.name] as number) ?? 0),
                     0
                   );
                   const avg = (sum / Math.max(chartData.length, 1)).toFixed(1);
