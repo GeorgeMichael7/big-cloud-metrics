@@ -1,0 +1,110 @@
+// Big Cloud Metrics AI — Prisma Schema
+// Database: PostgreSQL (Neon.tech)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  PHARMACIST
+  TECHNICIAN
+}
+
+enum InputType {
+  INTEGER             // Simple counter (e.g., calls made)
+  INTEGER_WITH_NOTES  // Counter + optional text note
+  NOTES_ONLY          // Free text entry only
+}
+
+enum TargetScope {
+  PER_TECH        // Each technician must hit this individually
+  PER_PHARMACIST  // Each pharmacist must hit this individually
+  PER_PERSON      // Every user regardless of role
+  TEAM_TOTAL      // The whole team combined must hit this
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  timezone  String   @default("America/New_York")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  logs  MetricLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  password     String   // bcrypt hashed
+  role         Role     @default(TECHNICIAN)
+  locationId   String
+  avatarColor  String   @default("#3B82F6") // hex color for avatar background
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  location Location    @relation(fields: [locationId], references: [id])
+  logs     MetricLog[]
+
+  @@index([locationId])
+  @@index([role])
+}
+
+model MetricType {
+  id              String      @id @default(cuid())
+  name            String
+  description     String?
+  inputType       InputType   @default(INTEGER)
+  isActive        Boolean     @default(true)
+  displayOrder    Int         @default(0)
+  color           String      @default("#3B82F6") // hex color for UI
+  icon            String      @default("📊")      // emoji icon
+  target          Float?      // numeric goal (null = no target)
+  targetScope     TargetScope? // how the target applies
+  // comma-separated roles that can log this metric; empty = all roles
+  applicableRoles String      @default("")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  logs MetricLog[]
+}
+
+model MetricLog {
+  id           String   @id @default(cuid())
+  userId       String
+  metricTypeId String
+  locationId   String
+  // The calendar work-date this log belongs to (midnight NY time)
+  workDate     DateTime
+  // The increment value — almost always 1, but supports custom amounts
+  value        Float    @default(1)
+  notes        String?
+  // Exact wall-clock time the log was created, for heatmap analytics
+  loggedAt     DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id])
+  metricType MetricType @relation(fields: [metricTypeId], references: [id])
+  location   Location   @relation(fields: [locationId], references: [id])
+
+  @@index([userId, workDate])
+  @@index([locationId, workDate])
+  @@index([metricTypeId, workDate])
+  @@index([loggedAt])
+}
